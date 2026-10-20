@@ -395,7 +395,7 @@ function abrirCaso(id) {
 function preencherForm(r) {
   document.getElementById('f_nome').value = r.nome||'';
   document.getElementById('f_cpf').value = r.cpf||'';
-  document.getElementById('f_id_controle').value = r.id_controle||'';
+  document.getElementById('f_id_controle').value = r.nis||'';
   document.getElementById('f_data_abertura').value = r.data_abertura||'';
   document.getElementById('f_status').value = r.status||'Em andamento';
   ['t1','t2','t3','t4','t5'].forEach(id => {
@@ -429,7 +429,8 @@ function lerForm() {
     id: idAtivo,
     nome: document.getElementById('f_nome').value.trim(),
     cpf: document.getElementById('f_cpf').value.trim(),
-    id_controle: document.getElementById('f_id_controle').value.trim(),
+    // gravado no campo 'nis' para usar a coluna já existente na planilha
+    nis: document.getElementById('f_id_controle').value.trim(),
     data_abertura: document.getElementById('f_data_abertura').value,
     status: document.getElementById('f_status').value,
     tipos: ['t1','t2','t3','t4','t5'].filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value),
@@ -439,6 +440,10 @@ function lerForm() {
     resultado: document.getElementById('f_resultado').value.trim(),
     obs: document.getElementById('f_obs').value.trim(),
     tecnico: document.getElementById('f_tecnico').value.trim(),
+    // campos removidos do formulário, mantidos vazios para a planilha
+    matricula: '',
+    assinatura: '',
+    data_preenche: '',
     atualizado: new Date().toISOString()
   };
 }
@@ -470,6 +475,8 @@ async function salvarCaso() {
       document.getElementById('labelId').textContent = 'ID: ' + idAtivo.slice(-8).toUpperCase();
       renderLista(document.getElementById('busca').value);
       toast('✔ Registro salvo com sucesso!', '#1a7a4a');
+    } else {
+      toast('Erro ao salvar: ' + (result.erro || result.error || 'resposta inválida da planilha'), '#b94a3a');
     }
   } catch(e) { toast('Erro ao salvar. Tente novamente.', '#b94a3a'); }
 }
