@@ -73,11 +73,14 @@
     .col-1{grid-template-columns:1fr}
     .col-2{grid-template-columns:1fr 1fr}
     .col-3{grid-template-columns:2fr 1fr 1fr}
+    .col-3i{grid-template-columns:1fr 1fr 1fr}
 
     .campo{display:flex;flex-direction:column;margin-bottom:14px}
     .campo label{font-size:8.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--azul2);margin-bottom:3px}
     .campo input[type=text],.campo input[type=date]{border:none;border-bottom:1.5px solid var(--linha);background:transparent;font-family:inherit;font-size:12px;color:var(--texto);padding:3px 2px 4px;outline:none;width:100%;transition:border-color .2s}
     .campo input:focus{border-bottom-color:var(--azul)}
+    .campo textarea{border:none;border-bottom:1.5px solid var(--linha);background:transparent;font-family:inherit;font-size:12px;color:var(--texto);padding:3px 2px 4px;outline:none;width:100%;resize:none;overflow:hidden;line-height:1.5;min-height:24px;white-space:pre-wrap;word-wrap:break-word}
+    .campo textarea:focus{border-bottom-color:var(--azul)}
 
     .denuncia-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:16px}
     .check-item{display:flex;align-items:flex-start;gap:8px;cursor:pointer}
@@ -140,7 +143,8 @@
       .app-shell{display:block}
       .pagina{margin:0;box-shadow:none;border:none}
       .main{display:block}
-      .campo input,.rodape-campo input,.registro-data input,.registro-info textarea{border-color:#888!important}
+      .campo input,.campo textarea,.rodape-campo input,.registro-data input,.registro-info textarea{border-color:#888!important}
+      textarea{overflow:visible!important}
       @page{margin:1cm 1.5cm;size:A4 portrait}
     }
   </style>
@@ -206,24 +210,15 @@
               <input type="text" id="f_cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascCPF(this)"/>
             </div>
             <div class="campo">
-              <label>NIS / NIS Família</label>
-              <input type="text" id="f_nis" placeholder="00000000000"/>
+              <label>Nº do ID – Controle de Apuração</label>
+              <input type="text" id="f_id_controle" placeholder="Nº do ID"/>
             </div>
           </div>
 
-          <div class="linha-campos col-2">
+          <div class="linha-campos col-3">
             <div class="campo">
               <label>Data da Denúncia / Abertura</label>
               <input type="date" id="f_data_abertura"/>
-            </div>
-            <div class="campo">
-              <label>Status do Caso</label>
-              <select id="f_status" class="status-select">
-                <option value="Em andamento">Em andamento</option>
-                <option value="Encerrado">Encerrado</option>
-                <option value="Arquivado">Arquivado</option>
-                <option value="Aguardando retorno">Aguardando retorno</option>
-              </select>
             </div>
           </div>
 
@@ -239,7 +234,7 @@
           </div>
           <div class="campo">
             <label>Especificar (se necessário)</label>
-            <input type="text" id="f_especificar" placeholder="Descrição complementar do tipo de irregularidade"/>
+            <textarea id="f_especificar" rows="1" placeholder="Descrição complementar do tipo de irregularidade" oninput="autoAltura(this)"></textarea>
           </div>
 
           <hr class="divisor"/>
@@ -251,7 +246,16 @@
           <hr class="divisor"/>
 
           <p class="secao-label">Desfecho / Encerramento</p>
-          <div class="linha-campos col-2">
+          <div class="linha-campos col-3i">
+            <div class="campo">
+              <label>Status do Caso</label>
+              <select id="f_status" class="status-select">
+                <option value="Em andamento">Em andamento</option>
+                <option value="Encerrado">Encerrado</option>
+                <option value="Arquivado">Arquivado</option>
+                <option value="Aguardando retorno">Aguardando retorno</option>
+              </select>
+            </div>
             <div class="campo">
               <label>Data de Encerramento</label>
               <input type="date" id="f_data_enc"/>
@@ -270,18 +274,6 @@
             <div class="rodape-campo">
               <label>Técnico Responsável</label>
               <input type="text" id="f_tecnico" placeholder="Nome completo do técnico"/>
-            </div>
-            <div class="rodape-campo">
-              <label>Matrícula</label>
-              <input type="text" id="f_matricula" placeholder="Nº de matrícula funcional"/>
-            </div>
-            <div class="rodape-campo">
-              <label>Assinatura / Rubrica</label>
-              <input type="text" id="f_assinatura" placeholder=" "/>
-            </div>
-            <div class="rodape-campo">
-              <label>Data de Preenchimento</label>
-              <input type="date" id="f_data_preenche"/>
             </div>
           </div>
 
@@ -368,12 +360,13 @@ function novoCaso() {
   document.getElementById('areaFormulario').style.display = 'block';
   document.getElementById('labelId').textContent = 'Novo Registro';
   // limpa campos de texto
-  ['f_nome','f_cpf','f_nis','f_especificar','f_resultado','f_obs','f_tecnico','f_matricula','f_assinatura'].forEach(id => {
+  ['f_nome','f_cpf','f_id_controle','f_especificar','f_resultado','f_obs','f_tecnico'].forEach(id => {
     var el = document.getElementById(id); if(el) el.value='';
   });
-  ['f_data_abertura','f_data_enc','f_data_preenche'].forEach(id => {
+  ['f_data_abertura','f_data_enc'].forEach(id => {
     var el = document.getElementById(id); if(el) el.value='';
   });
+  autoAltura(document.getElementById('f_especificar'));
   var st = document.getElementById('f_status'); if(st) st.value='Em andamento';
   ['t1','t2','t3','t4','t5'].forEach(id => {
     var el = document.getElementById(id); if(el) el.checked=false;
@@ -402,28 +395,27 @@ function abrirCaso(id) {
 function preencherForm(r) {
   document.getElementById('f_nome').value = r.nome||'';
   document.getElementById('f_cpf').value = r.cpf||'';
-  document.getElementById('f_nis').value = r.nis||'';
+  document.getElementById('f_id_controle').value = r.id_controle||'';
   document.getElementById('f_data_abertura').value = r.data_abertura||'';
   document.getElementById('f_status').value = r.status||'Em andamento';
   ['t1','t2','t3','t4','t5'].forEach(id => {
     document.getElementById(id).checked = (r.tipos||[]).includes(document.getElementById(id).value);
   });
   document.getElementById('f_especificar').value = r.especificar||'';
+  autoAltura(document.getElementById('f_especificar'));
   document.getElementById('f_data_enc').value = r.data_enc||'';
   document.getElementById('f_resultado').value = r.resultado||'';
   document.getElementById('f_obs').value = r.obs||'';
   document.getElementById('f_tecnico').value = r.tecnico||'';
-  document.getElementById('f_matricula').value = r.matricula||'';
-  document.getElementById('f_assinatura').value = r.assinatura||'';
-  document.getElementById('f_data_preenche').value = r.data_preenche||'';
   const cont = document.getElementById('listaRegistros');
   cont.innerHTML = '';
   (r.historico||[{data:'',info:''}]).forEach(h => adicionarEntrada(h.data, h.info));
 }
 
 function limparForm() {
-  ['f_nome','f_cpf','f_nis','f_especificar','f_resultado','f_obs','f_tecnico','f_matricula','f_assinatura'].forEach(id => document.getElementById(id).value='');
-  ['f_data_abertura','f_data_enc','f_data_preenche'].forEach(id => document.getElementById(id).value='');
+  ['f_nome','f_cpf','f_id_controle','f_especificar','f_resultado','f_obs','f_tecnico'].forEach(id => document.getElementById(id).value='');
+  ['f_data_abertura','f_data_enc'].forEach(id => document.getElementById(id).value='');
+  autoAltura(document.getElementById('f_especificar'));
   document.getElementById('f_status').value = 'Em andamento';
   ['t1','t2','t3','t4','t5'].forEach(id => document.getElementById(id).checked = false);
   const cont = document.getElementById('listaRegistros');
@@ -437,7 +429,7 @@ function lerForm() {
     id: idAtivo,
     nome: document.getElementById('f_nome').value.trim(),
     cpf: document.getElementById('f_cpf').value.trim(),
-    nis: document.getElementById('f_nis').value.trim(),
+    id_controle: document.getElementById('f_id_controle').value.trim(),
     data_abertura: document.getElementById('f_data_abertura').value,
     status: document.getElementById('f_status').value,
     tipos: ['t1','t2','t3','t4','t5'].filter(id => document.getElementById(id).checked).map(id => document.getElementById(id).value),
@@ -447,9 +439,6 @@ function lerForm() {
     resultado: document.getElementById('f_resultado').value.trim(),
     obs: document.getElementById('f_obs').value.trim(),
     tecnico: document.getElementById('f_tecnico').value.trim(),
-    matricula: document.getElementById('f_matricula').value.trim(),
-    assinatura: document.getElementById('f_assinatura').value.trim(),
-    data_preenche: document.getElementById('f_data_preenche').value,
     atualizado: new Date().toISOString()
   };
 }
@@ -527,6 +516,13 @@ function adicionarEntrada(data, info) {
     '</div>';
   cont.appendChild(div);
   if (!data) div.querySelector('input').focus();
+}
+
+// ===== ALTURA AUTOMÁTICA DOS CAMPOS DE TEXTO =====
+function autoAltura(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
 }
 
 // ===== IMPRIMIR =====
