@@ -9,12 +9,18 @@ export default function middleware(request) {
   const senha = process.env.SENHA;
   if (!senha) return; // sem SENHA configurada, o site fica aberto
 
+  const esperada = senha.trim().normalize('NFC');
   const auth = request.headers.get('authorization') || '';
   if (auth.startsWith('Basic ')) {
     try {
-      const credenciais = atob(auth.slice(6));
-      const digitada = credenciais.slice(credenciais.indexOf(':') + 1);
-      if (digitada === senha) return; // senha certa: segue normalmente
+      const bruto = atob(auth.slice(6).trim());
+      // O navegador pode mandar a senha em UTF-8 (acentos, ç) ou em Latin-1.
+      const bytes = Uint8Array.from(bruto, (c) => c.charCodeAt(0));
+      const utf8 = new TextDecoder('utf-8').decode(bytes);
+      for (const credenciais of [utf8, bruto]) {
+        const digitada = credenciais.slice(credenciais.indexOf(':') + 1);
+        if (digitada.trim().normalize('NFC') === esperada) return; // senha certa
+      }
     } catch (e) {
       // cabeçalho malformado: cai no pedido de senha abaixo
     }
