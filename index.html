@@ -99,7 +99,12 @@
     .registro-data{border-right:1px solid var(--linha);padding:6px 8px}
     .registro-data input{border:none;border-bottom:1px dashed var(--linha);background:transparent;font-family:inherit;font-size:11px;width:100%;color:var(--texto);outline:none;padding:2px 0}
     .registro-info{padding:6px 10px}
-    .registro-info textarea{border:none;background:transparent;font-family:inherit;font-size:11px;color:var(--texto);width:100%;min-height:40px;resize:vertical;outline:none;line-height:1.5}
+    .registro-info textarea{border:none;background:transparent;font-family:inherit;font-size:11px;color:var(--texto);width:100%;min-height:40px;resize:vertical;outline:none;line-height:1.5;overflow:hidden}
+
+    /* Cópia do texto das caixas, usada só na impressão (a caixa em si corta texto longo) */
+    .texto-impressao{display:none;white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;color:var(--texto);line-height:1.5}
+    .campo .texto-impressao{font-size:12px;padding:3px 2px 4px;min-height:24px;border-bottom:1.5px solid #888}
+    .registro-info .texto-impressao{font-size:11px;min-height:40px}
 
     .btn-add{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px dashed var(--azul);color:var(--azul);font-family:inherit;font-size:10.5px;font-weight:500;padding:5px 14px;cursor:pointer;letter-spacing:.04em;transition:background .18s;margin-bottom:4px}
     .btn-add:hover{background:var(--azul-claro)}
@@ -144,7 +149,8 @@
       .pagina{margin:0;box-shadow:none;border:none}
       .main{display:block}
       .campo input,.campo textarea,.rodape-campo input,.registro-data input,.registro-info textarea{border-color:#888!important}
-      textarea{overflow:visible!important}
+      #paginaImprimivel textarea{display:none!important}
+      .texto-impressao{display:block!important}
       @page{margin:1cm 1.5cm;size:A4 portrait}
     }
   </style>
@@ -519,9 +525,10 @@ function adicionarEntrada(data, info) {
     '</div>'+
     '<div class="registro-linha">'+
       '<div class="registro-data"><input type="date" value="'+(data||'')+'"/></div>'+
-      '<div class="registro-info"><textarea placeholder="Descreva as ações realizadas, contatos, documentos recebidos, encaminhamentos, resultados parciais…">'+(info||'')+'</textarea></div>'+
+      '<div class="registro-info"><textarea oninput="autoAltura(this)" placeholder="Descreva as ações realizadas, contatos, documentos recebidos, encaminhamentos, resultados parciais…">'+(info||'')+'</textarea></div>'+
     '</div>';
   cont.appendChild(div);
+  autoAltura(div.querySelector('textarea'));
   if (!data) div.querySelector('input').focus();
 }
 
@@ -533,7 +540,23 @@ function autoAltura(el) {
 }
 
 // ===== IMPRIMIR =====
+// Copia o texto de cada caixa para um bloco comum, que ocupa quantas linhas
+// (e páginas) forem precisas. Também roda no Ctrl+P, pelo evento beforeprint.
+function prepararImpressao() {
+  document.querySelectorAll('#paginaImprimivel textarea').forEach(function(t) {
+    var copia = t.nextElementSibling;
+    if (!copia || !copia.classList.contains('texto-impressao')) {
+      copia = document.createElement('div');
+      copia.className = 'texto-impressao';
+      t.after(copia);
+    }
+    copia.textContent = t.value;
+  });
+}
+window.addEventListener('beforeprint', prepararImpressao);
+
 function imprimirPDF() {
+  prepararImpressao();
   window.print();
 }
 
